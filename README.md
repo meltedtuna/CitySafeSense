@@ -1,113 +1,17 @@
-CitySafeSense — Edge AI for Urban Safety
+# CitySafeSense
 
-A privacy-preserving, real-time sensor analytics platform for detecting risky mobility patterns in urban hotspots.
+Edge AI for Urban Safety & Mobility Anomaly Detection
 
-CitySafeSense is an end-to-end system that uses edge devices, MQTT pipelines, and temporal deep learning models (TCNs) to detect unusual sensor patterns associated with risky events such as muggings, forced movement, and abrupt phone displacement, while preserving user privacy through anonymized hotspot sensing.
+CitySafeSense is a privacy-preserving edge-AI platform that detects abrupt movement anomalies using anonymous sensors, secure MQTT ingestion, and lightweight temporal neural networks optimized for low-cost hardware.
 
-This project includes:
-
-Edge ML models (TensorFlow TCN optimised for microcontrollers)
-
-Sensor simulator for synthetic IMU × GNSS × acoustic data
-
-Training pipeline with augmentation (jitter, noise, time-warp, rotation)
-
-Real-time MQTT ingestion stack (Mosquitto + TLS + password auth)
-
-Dashboard-ready APIs (FastAPI)
-
-Hotspot mapping logic for cities like São Paulo
-
-PDF whitepaper generator (automatic figure export)
-
-Deployment checklists and installation guide
-
-Containerized toolchain + future CI/CD support
-
-🚀 Features
-🔎 1. Edge Temporal Convolutional Network (TCN)
-
-A lightweight TCN architecture optimised for low-latency classification on microcontrollers.
-Detects patterns such as:
-
-Walking → entering a vehicle
-
-Stationary → forced movement
-
-Free walking → sudden displacement (mugging signature)
-
-🏙 2. Privacy-Preserving Hotspot Coverage
-
-A non-identifying sensor network that monitors:
-
-Movement vectors
-
-Velocity discontinuities
-
-Population-level flow anomalies
-
-No personal data, MAC addresses, IDs, or biometrics are collected.
-
-🛰 3. Synthetic Sensor Dataset Generator
-
-Generates realistic IMU + GNSS + acoustic signals:
-
-Normal walking
-
-Slow walking
-
-Entering a car
-
-Riding in vehicle
-
-Mugging profiles (sudden displacement + direction change)
-
-Includes augmentation templates for robust training.
-
-📊 4. Visualization Tools
-
-Matplotlib tools for:
-
-Sequence plots
-
-Overlays (walking vs car vs mugging)
-
-Vector flow field visualizations
-
-Auto-export of all charts to PDF
-
-📦 5. Full DevOps Support
-
-Docker container for inference + API
-
-GitHub Actions templates (PyTest, coverage, lint, build)
-
-Sphinx/MkDocs documentation scaffolding
-
-CLI tool wrapping all scripts (training, simulation, export)
-
-🛠 6. Installer-Friendly Deployment
-
-A printable checklist including:
-
-Wiring
-
-Hardware torque specs
-
-Safety guidelines
-
-Troubleshooting steps
-
-
-💡 Why This Exists
-
-Urban theft patterns often follow detectable kinetic signatures. With modern low-cost sensors + edge ML, we can build anonymous early-warning systems that help authorities understand where muggings occur, how movement patterns change, and when a stolen device moves differently from a person.
-
-This project provides an end-to-end reference implementation.
-
-📄 License
-
-MIT License (modifiable based on your preference).
+## Features
+- Edge Temporal Convolutional Network (TCN) for low-cost devices.
+- Synthetic sensor dataset generator (IMU + GNSS + Acoustic).
+- Secure MQTT ingestion via Mosquitto (TLS + passwords).
+- Training pipeline, TFLite export, and quantization.
+- CLI utilities and visualization tools.
+- Docker Compose for local development and testing.
+- Privacy-first design (no personal data collected).
 
 ## Quick start
 
@@ -268,3 +172,34 @@ The `publish-ghcr` workflow will publish the image when you push a tag matching 
 [![Publish to GHCR](https://github.com/meltedtuna/CitySafeSense/actions/workflows/publish-ghcr.yml/badge.svg)](https://github.com/meltedtuna/CitySafeSense/actions/workflows/publish-ghcr.yml)
 
 This badge shows the latest status of the `publish-ghcr` workflow.
+
+
+## Smoke workflow dispatch examples
+
+You can run the **Smoke training & export** workflow manually via the GitHub UI (Actions → Smoke training & export → Run workflow)
+or via the `gh` CLI. The workflow supports two inputs:
+
+- `image_tag` — optional, pull a specific GHCR image tag (e.g. `v1.0.0`). If omitted, the workflow will try:
+  1. the provided `image_tag` input,
+  2. the latest GitHub Release tag,
+  3. the latest Git tag (via `git describe --tags --abbrev=0`),
+  4. fallback to `latest`.
+
+- `build_override` — optional boolean (`true`/`false`). If `true`, forces a local build even if the image is available.
+
+### Examples:
+
+Run the workflow with a specific tag:
+```bash
+gh workflow run ci.yml --repo meltedtuna/CitySafeSense --ref main --field image_tag=v1.0.0
+```
+
+Run the workflow and force a local build:
+```bash
+gh workflow run ci.yml --repo meltedtuna/CitySafeSense --ref main --field build_override=true
+```
+
+Run the workflow, auto-selecting the latest release or git tag if available:
+```bash
+gh workflow run ci.yml --repo meltedtuna/CitySafeSense --ref main
+```
