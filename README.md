@@ -80,9 +80,3 @@ Only anonymous aggregated motion vectors:
 - Event probabilities  
 - Density changes
 
-### 📄 7. Whitepaper Generator  
-All figures and diagrams exported automatically into the PDF whitepaper.
-
----
-
-# 🏗 Repository Structure
