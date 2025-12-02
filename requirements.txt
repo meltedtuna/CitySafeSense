@@ -1,0 +1,11 @@
+numpy
+scipy
+matplotlib
+pandas
+tensorflow==2.12.0
+tflite-runtime
+paho-mqtt
+click
+pytest
+pyyaml
+scikit-learn

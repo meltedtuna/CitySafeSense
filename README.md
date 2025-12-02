@@ -1,0 +1,174 @@
+# CitySafeSense
+
+Edge AI for Urban Safety & Mobility Anomaly Detection
+
+CitySafeSense is a privacy-preserving edge-AI platform that detects abrupt movement anomalies using anonymous sensors, secure MQTT ingestion, and lightweight temporal neural networks optimized for low-cost hardware.
+
+## Features
+- Edge Temporal Convolutional Network (TCN) for low-cost devices.
+- Synthetic sensor dataset generator (IMU + GNSS + Acoustic).
+- Secure MQTT ingestion via Mosquitto (TLS + passwords).
+- Training pipeline, TFLite export, and quantization.
+- CLI utilities and visualization tools.
+- Docker Compose for local development and testing.
+- Privacy-first design (no personal data collected).
+
+## Quick start
+
+```bash
+# create virtualenv
+python -m venv .venv
+source .venv/bin/activate
+
+# install
+pip install -r requirements.txt
+
+# run synthetic data generator
+python -m src.tools.generate_synthetic --out data/synthetic_sample.npy --duration 60
+
+# start broker (docker-compose)
+docker compose up -d
+
+# train a tiny model (demo)
+python -m src.train.train_demo --epochs 2
+
+# export TFLite
+python -m src.model.export_tflite --checkpoint ./checkpoints/demo.ckpt --out model.tflite
+```
+
+## Project layout
+```
+CitySafeSense/
+├─ src/
+│  ├─ data/
+│  ├─ model/
+│  ├─ train/
+│  ├─ ingest/
+│  ├─ tools/
+│  └─ cli.py
+├─ docker-compose.yml
+├─ Dockerfile
+├─ requirements.txt
+├─ README.md
+└─ LICENSE
+```
+
+## License
+MIT. See `LICENSE` in repo.
+
+
+
+## Training & export examples
+
+Run a short demo training (1 epoch), save a full `.keras` model and export a quantized TFLite model:
+
+```bash
+python -m src.train.train_demo --epochs 1 --save_full_model --export_tflite --tflite_quantize
+```
+
+This will produce artifacts under `checkpoints/`:
+
+- `full_model_best.keras` (full model saved by the FullModelSaver callback)
+- `best_model.h5` (ModelCheckpoint file)
+- `citysafesense_model.json` and `citysafesense_model_summary.txt` (architecture)
+- `model.tflite` (exported TFLite; quantized if `--tflite_quantize` was used)
+
+For better quantization results, customize `src/tools/representative_dataset.py` to yield representative samples from your real dataset.
+
+
+## Manually trigger the CI smoke job (Actions -> Run workflow)
+
+The repository includes a manual smoke workflow to run a short training + export. To invoke it:
+
+1. Go to the **Actions** tab in your GitHub repository.
+2. Select the workflow named **Smoke training & export**.
+3. Click **Run workflow** (the manual dispatch button) and choose branch `main` (or another branch).
+4. Click the green **Run workflow** button to start the job.
+
+The workflow will perform a 1-epoch training, export a TFLite model, and upload artifacts under *Artifacts* in the workflow run (look for `smoke-model-artifacts`).
+
+
+## CI smoke workflow badge (optional)
+
+You can add a workflow status badge that points to the repository Actions workflow. Replace `<OWNER>` and `<REPO>` with your GitHub owner and repository name.
+
+```
+[![Smoke workflow](https://github.com/<OWNER>/<REPO>/actions/workflows/.github/workflows/ci.yml/badge.svg?event=workflow_dispatch)](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml)
+```
+
+To manually run the smoke workflow:
+1. Go to **Actions → Smoke training & export** in the GitHub UI.
+2. Click **Run workflow** (choose branch and inputs) and run.
+
+Note: The smoke job builds the `infra/Dockerfile.tf` image in CI and runs a 1-epoch training inside that container, then uploads artifacts from `checkpoints/` and `data/sample.npy`.
+
+
+**Note about producing real model artifacts in this environment**
+
+I updated the CI to build and run the Docker image in GitHub Actions so the full E2E can run in CI. I cannot run Docker builds inside this assistant execution environment to produce real `checkpoints/` artifacts here. To produce real artifacts locally, run:
+
+```bash
+# build image locally and run E2E
+docker build -f infra/Dockerfile.tf -t citysafesense:local .
+docker run --rm -v "$(pwd)":/app citysafesense:local \
+  python -m src.train.train_demo --epochs 1 --save_full_model --export_tflite --tflite_quantize
+```
+
+After that, `checkpoints/` will contain real model artifacts and `data/sample.npy` will be updated.
+
+
+## Docker image build workflow
+
+There is a dedicated GitHub Actions workflow `.github/workflows/docker-build.yml` that builds the
+runtime Docker image (`infra/Dockerfile.tf`) and caches intermediate layers to speed up future builds.
+You can trigger it manually under Actions -> Docker Image Build (cached) or let it run on pushes to `main`.
+
+
+## Pushing this repo to GitHub
+
+You can push this repository to GitHub in two ways:
+
+1. **Using the `gh` CLI (recommended)**
+
+```bash
+# ensure gh is installed and authenticated: gh auth login
+./scripts/create_and_push_repo.sh <OWNER>/<REPO>
+```
+
+2. **Manually with a Personal Access Token (PAT)**
+
+Create a repository in the GitHub UI or use the REST API with a PAT that has `repo` and `workflow` scopes, then push:
+
+```bash
+git remote add origin git@github.com:<OWNER>/<REPO>.git
+git branch -M main
+git push -u origin main
+```
+
+If you want me to push on your behalf, provide a repo name and a PAT with `repo` and `workflow` scopes. (Be careful sharing tokens.)
+
+
+## Container image (GHCR)
+
+You can pull the prebuilt image from GitHub Container Registry (GHCR) once published:
+
+```bash
+docker pull ghcr.io/<OWNER>/citysafesense:latest
+# or a specific commit
+docker pull ghcr.io/<OWNER>/citysafesense:<COMMIT_SHA>
+```
+
+Badge (replace `<OWNER>` with your org/user):
+
+```
+[![GHCR image](https://img.shields.io/badge/ghcr.io%2F<OWNER>%2Fcitysafesense-blue)](https://ghcr.io/packages)
+```
+
+The `publish-ghcr` workflow will publish the image when you push a tag matching `v*` (for example `v1.0.0`) or when you run the workflow manually via Actions → Publish Docker image to GHCR.
+
+
+## Publish GHCR workflow badge
+
+[![Publish to GHCR](https://github.com/meltedtuna/CitySafeSense/actions/workflows/publish-ghcr.yml/badge.svg)](https://github.com/meltedtuna/CitySafeSense/actions/workflows/publish-ghcr.yml)
+
+This badge shows the latest status of the `publish-ghcr` workflow.
