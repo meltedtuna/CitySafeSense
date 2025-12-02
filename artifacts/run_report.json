@@ -1,0 +1,25 @@
+{
+  "steps": [
+    [
+      "generate_csv",
+      "ok",
+      "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv"
+    ],
+    [
+      "csv_to_windows",
+      "error",
+      "Traceback (most recent call last):\n  File \"/tmp/ipykernel_12/3309786731.py\", line 113, in <module>\n    from src.tools import csv_to_windows\nModuleNotFoundError: No module named 'src'\n"
+    ],
+    [
+      "visualize",
+      "error",
+      "Traceback (most recent call last):\n  File \"/tmp/ipykernel_12/3309786731.py\", line 134, in <module>\n    from src.tools import visualize_windows\nModuleNotFoundError: No module named 'src'\n"
+    ],
+    [
+      "train_demo",
+      "error",
+      "\n/usr/local/bin/python3: Error while finding module specification for 'src.train.train_demo' (ModuleNotFoundError: No module named 'src')\n"
+    ]
+  ],
+  "artifact_zip": "/mnt/data/CitySafeSense_artifacts.zip"
+}
