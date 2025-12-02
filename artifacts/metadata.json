@@ -1,0 +1,74 @@
+[
+  {
+    "file": "test_demo_0.npy",
+    "source": "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv",
+    "start_row": 0,
+    "end_row": 100
+  },
+  {
+    "file": "test_demo_1.npy",
+    "source": "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv",
+    "start_row": 50,
+    "end_row": 150
+  },
+  {
+    "file": "test_demo_2.npy",
+    "source": "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv",
+    "start_row": 100,
+    "end_row": 200
+  },
+  {
+    "file": "test_demo_3.npy",
+    "source": "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv",
+    "start_row": 150,
+    "end_row": 250
+  },
+  {
+    "file": "test_demo_4.npy",
+    "source": "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv",
+    "start_row": 200,
+    "end_row": 300
+  },
+  {
+    "file": "test_demo_5.npy",
+    "source": "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv",
+    "start_row": 250,
+    "end_row": 350
+  },
+  {
+    "file": "test_demo_6.npy",
+    "source": "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv",
+    "start_row": 300,
+    "end_row": 400
+  },
+  {
+    "file": "test_demo_7.npy",
+    "source": "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv",
+    "start_row": 350,
+    "end_row": 450
+  },
+  {
+    "file": "test_demo_8.npy",
+    "source": "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv",
+    "start_row": 400,
+    "end_row": 500
+  },
+  {
+    "file": "test_demo_9.npy",
+    "source": "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv",
+    "start_row": 450,
+    "end_row": 550
+  },
+  {
+    "file": "test_demo_10.npy",
+    "source": "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv",
+    "start_row": 500,
+    "end_row": 600
+  },
+  {
+    "file": "test_demo_11.npy",
+    "source": "/mnt/data/CitySafeSense/raw_csvs/test_demo.csv",
+    "start_row": 550,
+    "end_row": 650
+  }
+]
