@@ -17,7 +17,6 @@ It is an end-to-end reference system that covers:
 - Visualization + data tools
 - Infrastructure + Dockerization
 - API + CLI
-- Documentation + whitepaper generator
 - Deployment checklists for installers
 
 ---
