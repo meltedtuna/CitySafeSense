@@ -1,0 +1,94 @@
+CitySafeSense: Privacy-Preserving Urban Anomaly Detection System Version 1.0 — Draft Date: 2025-12-02 
+
+1. Executive Summary
+CitySafeSense is an innovative, privacy-preserving system designed to detect anomalous events in urban environments—such as theft, suspicious activity, or unsafe behaviors—while protecting personal privacy. By combining edge-based sensors, machine learning, and ethical data-handling principles, the system provides actionable insights to public safety authorities and researchers without tracking individuals or storing personally identifiable information (PII).
+
+2. Objectives
+	•	Detect anomalous events in real time (e.g., theft, aggressive behavior).
+	•	Maintain privacy by design: all data is anonymized or aggregated.
+	•	Provide actionable dashboards and alerts for decision-making.
+	•	Operate autonomously with robust energy and connectivity solutions.
+	•	Comply with LGPD and other relevant privacy regulations.
+
+3. System Architecture
+
+3.1 Hardware Layer
+	•	Edge Sensors: Cameras, BLE/Wi-Fi RF sensors, environmental sensors.
+	•	Power Solutions: Battery packs and optional solar panels.
+	•	Mounting: High, safe positions (light poles, rooftops) using compliant brackets and torque specifications.
+	•	Connectivity Fallback: Local data storage and buffering in case of network outages.
+
+3.2 Edge Processing Layer
+	•	Video and sensor streams processed locally to extract motion vectors and anonymized features.
+	•	Only aggregated event flags transmitted to the central system.
+	•	No raw video or identifiers stored.
+
+3.3 Analytics & ML Layer
+	•	Temporal Convolutional Network (TCN) models for sequence classification.
+	•	Real-time anomaly detection and scoring.
+	•	Data augmentation: time-warping, noise addition, rotation for robust training.
+
+3.4 Decision & Alert Layer
+	•	Generates anonymized alerts and statistical dashboards.
+	•	Allows authorities to visualize hotspots without exposing personal data.
+
+3.5 Governance & Audit Layer
+	•	Logging of data access, processing, and alerts.
+	•	Audit trails to verify compliance with privacy and ethical policies.
+	•	Transparency reports published periodically.
+
+4. Ethical & Privacy Principles
+	•	Privacy by Design: Minimal data collection, anonymization, and edge processing.
+	•	Purpose Limitation: Data used solely for anomaly detection; no function creep.
+	•	Non-Discrimination: Alerts and models tested to avoid bias.
+	•	Transparency: Public notices, dashboards, and governance committees.
+	•	Data Subject Rights: Individuals can request information, correction, or deletion.
+
+5. Data Handling & Security
+	•	No persistent identifiers (MAC, IMSI, IMEI) stored.
+	•	Data encrypted in transit and at rest.
+	•	Aggregated or anonymized data retained only for defined analysis windows.
+	•	Access restricted to authorized personnel under role-based controls.
+
+6. Deployment Guidelines
+
+6.1 Installation Checklist
+	•	Confirm site authorization for high-position mounts.
+	•	Install sensors using proper torque specifications and safety brackets.
+	•	Connect power sources: battery + optional solar backup.
+	•	Configure local buffering for network outages.
+	•	Place clear public signage for transparency.
+
+6.2 Operational Checklist
+	•	Validate edge processing and event detection.
+	•	Verify communication with central dashboard.
+	•	Confirm automated alerts and logging are functional.
+	•	Conduct periodic maintenance and battery checks.
+
+7. Internet-Facing GUI
+	•	Real-time dashboard for aggregated hotspot statistics.
+	•	Interactive maps showing anonymized event density.
+	•	Graphs of walking, driving, and mugging event trends.
+	•	Accessible via secure login with password authentication and TLS encryption.
+
+8. Machine Learning Pipeline
+	•	Model: Edge-based TCN for sequence classification.
+	•	Training Data: Synthetic sensor sequences generated with data augmentation.
+	•	Validation: Overlay plots for walking vs driving vs mugging sequences.
+	•	CLI: Single interface to run data generation, training, evaluation, and visualization.
+	•	Deployment: Dockerized and GitHub Actions CI/CD for automatic builds and testing.
+
+9. CI/CD & Repository Management
+	•	Python testing and coverage with GitHub Actions.
+	•	Docker image building and deployment.
+	•	Automatic MkDocs documentation deployment.
+	•	Coverage badges and versioned whitepaper updates.
+
+10. Conclusion
+CitySafeSense combines advanced edge AI, ethical data practices, and robust deployment strategies to provide actionable urban safety insights while respecting personal privacy. Its modular design, fallback systems, and governance frameworks ensure safe, transparent, and compliant operation in real urban environments.
+Appendix
+	•	Hardware List: Cameras, environmental sensors, BLE/Wi-Fi sensors, battery packs, solar panels, mounting brackets.
+	•	Software Stack: Python, TensorFlow, Matplotlib, Flask/FastAPI, MkDocs.
+	•	References: LGPD, Privacy by Design principles, temporal convolutional networks.
+
+Notes on Formatting: - Headings use Markdown styles (#, ##) for Word conversion. - Bulleted lists are used for clarity. - Sections and subsections allow easy navigation and automatic table of contents generation in Word. - Graphs, tables, and images can be inserted in the corresponding sections to enhance readability and professionalism.
