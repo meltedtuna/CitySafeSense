@@ -1,17 +1,114 @@
-# CitySafeSense
+CitySafeSense — Edge AI for Urban Safety
 
-Edge AI for Urban Safety & Mobility Anomaly Detection
+A privacy-preserving, real-time sensor analytics platform for detecting risky mobility patterns in urban hotspots.
 
-CitySafeSense is a privacy-preserving edge-AI platform that detects abrupt movement anomalies using anonymous sensors, secure MQTT ingestion, and lightweight temporal neural networks optimized for low-cost hardware.
+CitySafeSense is an end-to-end system that uses edge devices, MQTT pipelines, and temporal deep learning models (TCNs) to detect unusual sensor patterns associated with risky events such as muggings, forced movement, and abrupt phone displacement, while preserving user privacy through anonymized hotspot sensing.
 
-## Features
-- Edge Temporal Convolutional Network (TCN) for low-cost devices.
-- Synthetic sensor dataset generator (IMU + GNSS + Acoustic).
-- Secure MQTT ingestion via Mosquitto (TLS + passwords).
-- Training pipeline, TFLite export, and quantization.
-- CLI utilities and visualization tools.
-- Docker Compose for local development and testing.
-- Privacy-first design (no personal data collected).
+This project includes:
+
+Edge ML models (TensorFlow TCN optimised for microcontrollers)
+
+Sensor simulator for synthetic IMU × GNSS × acoustic data
+
+Training pipeline with augmentation (jitter, noise, time-warp, rotation)
+
+Real-time MQTT ingestion stack (Mosquitto + TLS + password auth)
+
+Dashboard-ready APIs (FastAPI)
+
+Hotspot mapping logic for cities like São Paulo
+
+PDF whitepaper generator (automatic figure export)
+
+Deployment checklists and installation guide
+
+Containerized toolchain + future CI/CD support
+
+🚀 Features
+🔎 1. Edge Temporal Convolutional Network (TCN)
+
+A lightweight TCN architecture optimised for low-latency classification on microcontrollers.
+Detects patterns such as:
+
+Walking → entering a vehicle
+
+Stationary → forced movement
+
+Free walking → sudden displacement (mugging signature)
+
+🏙 2. Privacy-Preserving Hotspot Coverage
+
+A non-identifying sensor network that monitors:
+
+Movement vectors
+
+Velocity discontinuities
+
+Population-level flow anomalies
+
+No personal data, MAC addresses, IDs, or biometrics are collected.
+
+🛰 3. Synthetic Sensor Dataset Generator
+
+Generates realistic IMU + GNSS + acoustic signals:
+
+Normal walking
+
+Slow walking
+
+Entering a car
+
+Riding in vehicle
+
+Mugging profiles (sudden displacement + direction change)
+
+Includes augmentation templates for robust training.
+
+📊 4. Visualization Tools
+
+Matplotlib tools for:
+
+Sequence plots
+
+Overlays (walking vs car vs mugging)
+
+Vector flow field visualizations
+
+Auto-export of all charts to PDF
+
+📦 5. Full DevOps Support
+
+Docker container for inference + API
+
+GitHub Actions templates (PyTest, coverage, lint, build)
+
+Sphinx/MkDocs documentation scaffolding
+
+CLI tool wrapping all scripts (training, simulation, export)
+
+🛠 6. Installer-Friendly Deployment
+
+A printable checklist including:
+
+Wiring
+
+Hardware torque specs
+
+Safety guidelines
+
+Troubleshooting steps
+
+Required signage & compliance notes
+
+💡 Why This Exists
+
+Urban theft patterns often follow detectable kinetic signatures. With modern low-cost sensors + edge ML, we can build anonymous early-warning systems that help authorities understand where muggings occur, how movement patterns change, and when a stolen device moves differently from a person.
+
+This project provides an end-to-end reference implementation.
+
+📄 License
+
+MIT License (modifiable based on your preference).
 
 ## Quick start
 
