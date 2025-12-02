@@ -1,4 +1,4 @@
-CitySafeSense — Edge AI for Urban Safety
+CitySafeSense — Edge AI for Urban Safety | PROOF OF CONCEPT
 
 A privacy-preserving, real-time sensor analytics platform for detecting risky mobility patterns in urban hotspots.
 
