@@ -220,29 +220,6 @@ runtime Docker image (`infra/Dockerfile.tf`) and caches intermediate layers to s
 You can trigger it manually under Actions -> Docker Image Build (cached) or let it run on pushes to `main`.
 
 
-## Pushing this repo to GitHub
-
-You can push this repository to GitHub in two ways:
-
-1. **Using the `gh` CLI (recommended)**
-
-```bash
-# ensure gh is installed and authenticated: gh auth login
-./scripts/create_and_push_repo.sh <OWNER>/<REPO>
-```
-
-2. **Manually with a Personal Access Token (PAT)**
-
-Create a repository in the GitHub UI or use the REST API with a PAT that has `repo` and `workflow` scopes, then push:
-
-```bash
-git remote add origin git@github.com:<OWNER>/<REPO>.git
-git branch -M main
-git push -u origin main
-```
-
-If you want me to push on your behalf, provide a repo name and a PAT with `repo` and `workflow` scopes. (Be careful sharing tokens.)
-
 
 ## Container image (GHCR)
 
@@ -260,11 +237,3 @@ Badge (replace `<OWNER>` with your org/user):
 [![GHCR image](https://img.shields.io/badge/ghcr.io%2F<OWNER>%2Fcitysafesense-blue)](https://ghcr.io/packages)
 ```
 
-The `publish-ghcr` workflow will publish the image when you push a tag matching `v*` (for example `v1.0.0`) or when you run the workflow manually via Actions → Publish Docker image to GHCR.
-
-
-## Publish GHCR workflow badge
-
-[![Publish to GHCR](https://github.com/meltedtuna/CitySafeSense/actions/workflows/publish-ghcr.yml/badge.svg)](https://github.com/meltedtuna/CitySafeSense/actions/workflows/publish-ghcr.yml)
-
-This badge shows the latest status of the `publish-ghcr` workflow.
