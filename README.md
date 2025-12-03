@@ -239,7 +239,7 @@ Badge (replace `<OWNER>` with your org/user):
 
 
 
-🚀 CitySafeSense — Raspberry Pi 4 Edge Deployment Guide
+## 🚀 CitySafeSense — Raspberry Pi 4 Edge Deployment Guide
 
 This guide walks you through preparing a Raspberry Pi 4 to run the CitySafeSense Edge AI Inference Runtime, including:
 
@@ -255,7 +255,7 @@ Running as a systemd service or as a Docker container
 
 Everything is optimized for Raspberry Pi 4 (ARM64 or ARMv7).
 
-1. 🔧 Raspberry Pi 4 — System Preparation
+## 1. 🔧 Raspberry Pi 4 — System Preparation
 ✔️ Recommended OS
 
 Use Raspberry Pi OS (64-bit):
@@ -271,7 +271,7 @@ sudo reboot
 ✔️ Essential packages
 sudo apt install -y python3 python3-pip python3-venv git wget unzip mosquitto-clients
 
-2. 🔐 Install TFLite Runtime (optimized for Pi 4)
+## 2. 🔐 Install TFLite Runtime (optimized for Pi 4)
 
 TensorFlow Lite full is too heavy; Raspberry Pi uses tflite-runtime.
 
@@ -288,7 +288,7 @@ pip3 install https://github.com/google-coral/pycoral/releases/download/release-f
 
 If you're running ARMv7 (32-bit), install the ARMv7 wheel instead.
 
-3. 📁 Deploy CitySafeSense Files to Pi
+## 3. 📁 Deploy CitySafeSense Files to Pi
 
 On your local machine, copy the release bundle:
 
@@ -310,7 +310,7 @@ client_mqtt.py
 certs/
 release-dist/  (optional for debugging)
 
-4. ⚙️ Create Python Virtual Environment
+## 4. ⚙️ Create Python Virtual Environment
 cd ~/citysafesense
 python3 -m venv venv
 source venv/bin/activate
@@ -323,7 +323,7 @@ If tflite_runtime was not inside requirements, install manually:
 
 pip install tflite-runtime
 
-5. 🔧 Configure MQTT Secure Connection (Recommended)
+## 5. 🔧 Configure MQTT Secure Connection (Recommended)
 Create directory:
 mkdir -p ~/citysafesense/certs
 
@@ -340,7 +340,7 @@ mosquitto_sub --cafile certs/ca.pem \
   -t "citysafesense/events/#" \
   -u device1 -P "<password>"
 
-6. 🤖 Running the Model — Manual Test
+## 6. 🤖 Running the Model — Manual Test
 source venv/bin/activate
 python infer_edge.py \
   --model models/model_quant.tflite \
@@ -355,7 +355,7 @@ If everything works, you’ll see logs like:
 [INFO] Window processed — anomaly_prob=0.87
 [MQTT] Published event to citysafesense/events
 
-7. 🔁 Running as a Persistent systemd Service (recommended)
+## 7. 🔁 Running as a Persistent systemd Service (recommended)
 
 Create file:
 
@@ -392,7 +392,7 @@ sudo systemctl enable citysafesense
 sudo systemctl start citysafesense
 sudo journalctl -u citysafesense -f
 
-8. 🐳 Running with Docker (optional but excellent)
+## 8. 🐳 Running with Docker (optional but excellent)
 Install Docker:
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker pi
@@ -428,7 +428,7 @@ View logs:
 
 docker logs -f citysafesense
 
-9. 📊 Validate Data Flow
+## 9. 📊 Validate Data Flow
 Check MQTT messages arriving:
 mosquitto_sub --cafile certs/ca.pem -h mqtt.example.local \
   -t "citysafesense/events" -v -u user -P pass
@@ -442,7 +442,7 @@ Common telemetry JSON:
   "vector": [0.12, -1.09, 3.88]
 }
 
-10. ✔️ Performance Tips for Raspberry Pi 4
+## 10. ✔️ Performance Tips for Raspberry Pi 4
 Enable 64-bit mode
 
 Use Raspberry Pi OS 64-bit for fastest TFLite inference.
@@ -460,7 +460,7 @@ Reduce SD card wear:
 
 Use Docker bind mounts or tmpfs for logs.
 
-11. 🧪 Troubleshooting
+## 11. 🧪 Troubleshooting
 ❌ TFLite says “unsupported op”
 
 Your model uses ops not included in TF Lite Micro / TF Lite Runtime minimal build.
