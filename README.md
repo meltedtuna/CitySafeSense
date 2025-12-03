@@ -237,3 +237,393 @@ Badge (replace `<OWNER>` with your org/user):
 [![GHCR image](https://img.shields.io/badge/ghcr.io%2F<OWNER>%2Fcitysafesense-blue)](https://ghcr.io/packages)
 ```
 
+## Quick summary (what you’ll build)
+
+A weather/air-quality/motion edge node built around a single-board computer (Raspberry Pi 4 / Pi Zero 2 W alternative) or an MCU (ESP32 option) with sensors (temp/humidity, particulate matter, GPS, inertial), a robust battery pack with BMS, optional solar input, cellular + Wi-Fi comms, and layered redundancies (dual comms, UPS, storage backup, watchdog & healthcheck).
+
+## 1) Parts & tools (recommended)
+Core compute (pick one)
+
+## Raspberry Pi 4 (4GB) — for heavier local processing / neural inferencing OR
+
+Raspberry Pi Zero 2 W — low-power, for light workloads OR
+
+ESP32 (Wroom) — ultra low power (if no Linux needed)
+
+(Optional) NVIDIA Jetson Nano / Orin Nano — for heavy vision/AI
+
+## Connectivity
+
+LTE modem (USB or HAT) — e.g., Quectel EC25 / Quectel EG25 / USB LTE dongle with external antenna support
+
+Wi-Fi (built into Pi)
+
+LoRa module (SX127x) for long-range low-power mesh (optional)
+
+GPS module (u-blox NEO-M8N recommended)
+
+## Sensors
+
+Temperature & humidity: SHT31 or SHT35 (I2C)
+
+Particulate matter (PM2.5): Plantower PMS7003 or Sensirion SPS30 (UART/I2C)
+
+Gas / VOC (optional): Sensirion SGP40 or BME680 (VOC + temp/humidity/pressure) — avoid raw MQ sensors for production without calibration
+
+Inertial: MPU6050 / ICM20948 (imu) — accelerometer/gyro
+
+Light sensor: TSL2591 or BH1750 (I2C)
+
+Passive infrared (PIR) sensor (motion)
+
+Camera (optional): Raspberry Pi Camera v2 / IMX219 or Pi HQ camera
+
+## Power / battery
+
+LiFePO4 3.2V nominal cells (recommended for safety) OR high-quality Li-ion pack with integrated BMS
+
+Battery Management System (BMS) matched to pack (overcharge, overdischarge, balancing)
+
+5V DC-DC converter / UPS HAT (for Raspberry Pi): e.g., Pi UPS HAT, PowerBoost 5V with LiPo support, or dedicated UPS board with fuel gauge. Must support continuous 5V @ device current.
+
+Inline fuse (fast blow) on battery output (rating slightly above expected max current)
+
+Optional solar charge controller (MPPT) if using solar
+
+## Storage & redundancy
+
+microSD (industrial grade) + external USB SSD (for mirrored data/overflow)
+
+microSD write-protect switch / overlayfs to reduce SD corruption
+
+## Mechanical / enclosure / misc
+
+IP66/67-rated enclosure (if outdoor) sized to fit SBC + battery pack + connectors
+
+Gasket, cable glands (appropriate diameters), stainless hardware (screws, standoffs)
+
+DIN rail mounts or wall mounts, vibration damping pads
+
+Antenna(s) with SMA connectors (LTE, GPS separate)
+
+Heat sinks, thermal pads, small fan (if enclosed and hot environment)
+
+## Tools
+
+Soldering iron + flux, hot air station optional
+
+Multimeter, clamp meter, thermal probe
+
+Wire strippers, crimpers, M2–M4 hex drivers, screwdrivers
+
+Heat shrink tubes, cable ties, silicone sealant
+
+USB to serial adapter (for debugging)
+
+## 2) Planning & layout (decisions before assembly)
+
+Pick compute platform based on workload (Pi4 = heavy; Pi Zero/ESP32 = low-power).
+
+Decide primary comms: will it use LTE (cellular) as primary, Wi-Fi as fallback, or vice versa? Plan dual-SIM LTE if you want carrier redundancy.
+
+Define expected run time on battery and update frequency (sensing & transmission cadence affect power). You’ll need this for battery sizing — example calculation below.
+
+Select enclosure rated for the environment. If outdoor, include desiccant and conformal coating for PCBs.
+
+## 3) Power budgeting (worked example — follow this exactly)
+
+We must calculate power draw precisely (digit by digit). Assume the configuration below (you can swap values for your parts):
+
+Assumed component peak currents at 5 V:
+
+Raspberry Pi 4 peak draw: 1.200 A
+
+LTE modem TX peak: 0.600 A
+
+PMS7003 particulate sensor peak: 0.100 A
+
+SHT31 temp/humidity: 0.002 A
+
+MPU6050 inertial sensor: 0.003 A
+
+GPS module: 0.045 A
+
+Camera (when active): 0.250 A
+
+Misc USB peripherals (LEDs, antenna amplifiers): 0.200 A
+
+Now add them digit by digit:
+
+Start: 1.200 A (Pi)
+
+0.600 A = 1.800 A
+
+0.100 A = 1.900 A
+
+0.002 A = 1.902 A
+
+0.003 A = 1.905 A
+
+0.045 A = 1.950 A
+
+0.250 A = 2.200 A
+
+0.200 A = 2.400 A
+
+Total peak current = 2.400 A at 5 V.
+
+Power (Watts) = Voltage × Current = 5 V × 2.400 A = 12.000 W.
+
+If you need the device to run for 12 hours, energy required:
+
+Energy (Wh) = Power (W) × Time (h) = 12.000 W × 12 h = 144.000 Wh.
+
+If you will use a 5 V power bank specified in mAh, convert:
+
+mAh required at 5 V = (Wh ÷ V) × 1000
+Compute: 144.000 Wh ÷ 5 V = 28.800 Ah = 28,800 mAh.
+
+Account for DC-DC conversion inefficiency (typical 85% efficiency): divide by 0.85.
+
+28,800 mAh ÷ 0.85 = 33,882.352941... mAh ≈ 34,000 mAh (round up and allow margin).
+
+Conclusion: For the example configuration, plan a 5V battery pack with effective capacity ≥ 34,000 mAh (or battery energy ≥ 144 Wh with BMS and connectors), or provide solar trickle-charge to extend runtime.
+
+Safety note: If you build battery packs from cells, compute for cell voltage and pack configuration and always include a BMS; never rely on raw cells without proper protection.
+
+## 4) Mechanical & electrical assembly — step-by-step
+Step 0 — Prep
+
+Work on an anti-static mat. Verify you have standoffs to keep SBC off enclosure floor.
+
+Label each cable and connector with tape and marker.
+
+## Step 1 — Mount compute board
+
+Use appropriate standoffs (M2.5 or M3 as required). Place board so connectors face final access holes in enclosure.
+
+Affix thermal pad / heatsinks if heavy load expected.
+
+## Step 2 — Mount battery & UPS
+
+Install battery pack inside enclosure with vibration-damping tape/foam. Keep battery away from hot components (heat sink area).
+
+Install UPS HAT or DC-DC booster near Pi with secure screws. Connect battery to BMS input, BMS output to DC-DC converter, then to 5V rail. Place inline fuse between BMS output and DC-DC.
+
+Wiring snippet:
+
+Battery pack (+) -> BMS (+) -> inline fuse -> DC-DC input (+)
+Battery pack (-) -> BMS (-) -> DC-DC input (-)
+DC-DC output 5V -> Raspberry Pi 5V IN (or UPS HAT)
+
+## Step 3 — Route antennas outside
+
+Install cable glands and route LTE & GPS antenna cables through separate glands. Use gold/plated SMA connectors. Keep GPS antenna away from LTE for less interference.
+
+## Step 4 — Sensor wiring
+
+Use I2C for SHT31, BME680, light sensor. Connect SDA -> SDA, SCL -> SCL, power -> 3.3V (or 5V per sensor), ground -> GND. Use pull-ups only if not already on board.
+
+PMS7003 uses UART — connect TX/RX to Pi UART (use level shifter if needed).
+
+MPU6050 via I2C (same bus) but consider sensor address conflicts.
+
+Camera connects via CSI ribbon cable. Secure with lock.
+
+Keep sensor cables short where possible; use shielded cable for long runs.
+
+## Step 5 — Grounding
+
+Connect chassis ground to system ground only at single point to avoid ground loops. If outdoor with lightning risk, include surge protection and proper grounding to earth if possible.
+
+## Step 6 — Storage redundancy
+
+Install microSD with OS, then connect external USB SSD. Set up backup policy to copy sensor logs from SD to SSD frequently. For low risk of SD corruption, use overlayfs or read-only rootfs.
+
+## Step 7 — Close enclosure & test seals
+
+Verify gaskets, torque screws evenly, apply silicone where necessary. Add desiccant.
+
+5) Software: flashing, services, healthcheck & watchdog
+Flash OS & initial config (Raspberry Pi example)
+
+Flash Raspberry Pi OS (Lite) to microSD.
+
+Boot once with keyboard/monitor or enable SSH in /boot/ssh. Set locale, timezone, change password.
+
+sudo apt update && sudo apt upgrade -y
+
+Install Python3, pip: sudo apt install -y python3 python3-pip git
+
+Healthcheck HTTP endpoint (simple Python Flask)
+
+Create /opt/edge/healthcheck.py:
+
+#!/usr/bin/env python3
+from flask import Flask, jsonify
+import psutil, time
+app = Flask(__name__)
+start = time.time()
+
+@app.route("/health")
+def health():
+    uptime = time.time() - start
+    cpu = psutil.cpu_percent(interval=0.1)
+    mem = psutil.virtual_memory().percent
+    disk = psutil.disk_usage("/").percent
+    return jsonify({"status":"ok","uptime_s":int(uptime),"cpu_pct":cpu,"mem_pct":mem,"disk_pct":disk})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
+
+
+## Make executable and create systemd service /etc/systemd/system/edge-health.service:
+
+[Unit]
+Description=Edge Healthcheck
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/edge/healthcheck.py
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+
+
+Enable it:
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now edge-health.service
+
+Watchdog & auto-reboot
+
+Use hardware watchdog or systemd watchdog. For software, create a cron or systemd service that checks health endpoint and reboots if unresponsive. Example: check & reboot if /health 3 times fails.
+
+OTA & update strategy
+
+Keep software in git. Use a simple updater script that does git pull, runs migrations, and restarts services. Secure updates using signed commits or a CI artifact with checksum. Keep fallback image on USB SSD so if update bricks SD, system can boot from secondary media.
+
+6) Redundancy strategies (detailed)
+Power redundancy
+
+Primary: battery pack (LiFePO4 recommended) -> UPS HAT -> device.
+
+Secondary: solar panel + MPPT + battery charger for remote sites.
+
+Tertiary: supercapacitor or small 12 V SLA for short bursts to ride through high current modem TX spikes.
+
+Add fuse and TVS diodes on power lines to prevent transients.
+
+Communication redundancy
+
+Multi-SIM LTE with failover (two carriers), or one LTE + Wi-Fi fallback + LoRa for low-bandwidth uplink.
+
+Use connection manager (e.g., NetworkManager or connman) with priorities and a script that switches to the next available interface if the primary fails.
+
+Storage redundancy
+
+Mirror critical logs to external USB SSD (daily rsync). Use log rotation and a circular buffer to avoid filling storage. Consider remote log replication to cloud if bandwidth allows.
+
+Software redundancy / safety
+
+Keep an alternate boot partition or USB boot image with known-good release for rollback.
+
+Use systemd to auto-restart failed services.
+
+Implement heartbeat messages to central server; if no heartbeat for X minutes, remote operator alerted and device can reboot.
+
+Sensor redundancy
+
+Duplicate critical sensors (e.g., two temperature sensors) and use outlier detection (median or majority voting) before reporting.
+
+7) Calibration, testing & commissioning
+Initial checks (bench)
+
+Power device (without batteries for first test) via regulated 5V bench PSU. Set current limit to 3 A.
+
+Verify voltages at each sensor header.
+
+Boot OS, verify logs, run dmesg for errors.
+
+Check sensors one by one (Python quick scripts to read values). e.g., i2cdetect -y 1 for I2C sensors.
+
+Test LTE connection: sudo mmcli -L or sudo usb_modeswitch depending on modem. Ping a known server: ping -c 4 8.8.8.8.
+
+Field test
+
+Deploy device in final enclosure without closing it fully. Test comms at deployment location and confirm signal strengths. Calibrate sensors (PM sensor needs zero and span tests where possible). Confirm heat behavior over a few hours.
+
+Acceptance tests
+
+Battery discharge test: run device under normal sampling/transmit profile until battery reaches low threshold; validate BMS cut-off triggers safely.
+
+Failover test: simulate primary comms down and verify failover. Simulate SD corruption by forcing rootfs read-only and verify device continues recording to SSD.
+
+## 8) Troubleshooting common problems
+
+Device not booting: check power rail voltages and inline fuse. Connect serial console to read boot messages.
+
+SD card corruption: use industrial-grade SD cards, set vm.swappiness=10, enable overlayfs, or use read-only root to protect.
+
+LTE modems dropping: check antenna placement, use ferrite bead on USB cable, update modem firmware, ensure SIM provisioning (APN) correct.
+
+Sensor drift: re-calibrate sensors periodically and keep a second sensor for comparison.
+
+## 9) Bill of Materials (example, approximate items)
+
+Raspberry Pi 4 (4GB) — SBC
+
+microSD (industrial) 32 GB
+
+USB SSD 120 GB
+
+LTE modem (USB) + external antenna
+
+GPS module (u-blox) + antenna
+
+SHT31 temp/humidity (I2C)
+
+PMS7003 particulate sensor (UART)
+
+MPU6050 IMU (I2C)
+
+Pi Camera v2 (optional)
+
+LiFePO4 battery pack (12,800 mAh nominal pack or configurable to meet Wh) + BMS
+
+DC-DC step-up / UPS HAT with fuel gauge
+
+IP66 enclosure with glands
+
+Gasket, screws, standoffs, cable, connectors
+
+Inline fuse, TVS diodes, surge protector (for outdoor)
+
+(Quantities depend on your design; list the item sources and part numbers in your final BOM before ordering.)
+
+## 10) Safety & regulatory notes
+
+Lithium batteries can catch fire if abused. Always use BMS, fuses, and correct charge circuitry. Prefer LiFePO4 for outdoor/industrial use due to greater thermal stability.
+
+If mounting outdoors, ensure lightning protection and proper grounding. Follow local regulations for antenna placement and RF emissions.
+
+If device will be installed in public or critical infrastructure, include tamper detection and encrypted comms (TLS + certificate pinning).
+
+## 11) Quick checklist for final deployment
+
+ All sensors attached & verified on bench
+
+ Battery sized & BMS tested; inline fuse installed
+
+ Antennas installed, signal strength verified at site
+
+ Healthcheck endpoint running & accessible on LAN
+
+ Watchdog/service auto-restart configured
+
+ Backup USB SSD receiving copies of logs
+
+ Documentation (wiring diagram, calibration data, firmware version) stored centrally
+
