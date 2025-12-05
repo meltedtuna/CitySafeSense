@@ -1,0 +1,21 @@
+[2025-12-05T18:00:00Z] Run actions/checkout@v4
+[2025-12-05T18:00:05Z] Install jq docker.io docker-compose
+[2025-12-05T18:00:25Z] Setup Vault CLI (hashicorp/setup-vault@v1) v1.12.0
+[2025-12-05T18:00:30Z] vault status -> OK
+[2025-12-05T18:00:31Z] Fetching secrets from Vault path: secret/data/citysafesense/alertmanager
+[2025-12-05T18:00:32Z] Wrote secret files to alertmanager/secrets/ (contents not shown)
+[2025-12-05T18:00:33Z] docker compose up -d --build
+[2025-12-05T18:01:45Z] Prometheus ready.
+[2025-12-05T18:01:46Z] Workflow completed successfully.
+--- Common failure snippets ---
+ERROR: vault login failed: Permission denied
+  - Cause: VAULT_TOKEN invalid or has insufficient policy to read the KV path
+  - Fix: Provide a token with proper read permissions or use AppRole and update workflow
+
+ERROR: jq: error (at /tmp/vault_kv.json:...): Cannot index string with string "data"
+  - Cause: Vault returned non-KV v2 JSON (maybe KV v1) or path incorrect
+  - Fix: Ensure you used KV v2; adjust workflow to use `vault kv get -format=json secret/citysafesense/alertmanager` as appropriate
+
+ERROR: Prometheus not ready within timeout
+  - Cause: Prometheus failed to start or heavy image pulls slowed CI
+  - Fix: Increase timeout, pre-pull images in CI, or split integration tests

@@ -1,0 +1,20 @@
+groups:
+  - name: citysafesense.rules
+    rules:
+      - alert: HighTriageRate
+        expr: increase(cs_triage_published_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of triage events in last 5 minutes"
+          description: "More than 5 triage events detected in last 5 minutes."
+
+      - alert: MissingHeartbeat
+        expr: absent(cs_last_heartbeat_ts)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Heartbeat metrics missing"
+          description: "Heartbeat metrics endpoint not available."

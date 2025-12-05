@@ -1,0 +1,14 @@
+[2025-12-05T19:00:00Z] Run actions/checkout@v4
+[2025-12-05T19:00:05Z] Install rsync openssh-client
+[2025-12-05T19:00:20Z] rsync ./ -> user@1.2.3.4:/opt/citysafesense/
+[2025-12-05T19:00:25Z] ssh ... 'cd /opt/citysafesense && docker compose up -d --build' -> OK
+[2025-12-05T19:03:10Z] Remote docker compose completed; services started
+[2025-12-05T19:03:40Z] Workflow completed successfully.
+--- Common failure snippets ---
+ERROR: Permission denied (publickey)
+  - Cause: DEPLOY_SSH_PRIVATE_KEY invalid or not added to remote authorized_keys
+  - Fix: Add matching public key to remote user's ~/.ssh/authorized_keys and ensure correct key is in GH Secrets
+
+ERROR: rsync connection timed out
+  - Cause: Firewall or host unreachable
+  - Fix: Ensure runner's network can reach the host; use self-hosted runner in same network
