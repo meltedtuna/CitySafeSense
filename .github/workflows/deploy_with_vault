@@ -1,0 +1,129 @@
+name: Prepare secrets from Vault and Remote Deploy via SSH (ssh-agent w/ fallback)
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  VAULT_KV_PATH: "secret/data/citysafesense/alertmanager"  # adjust if needed
+  REMOTE_DIR: "/opt/citysafesense"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (jq, rsync & ssh client)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq rsync openssh-client
+
+      - name: Setup ssh-agent and add key
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+
+      - name: Verify ssh-agent has a key, fallback to file if not
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Checking ssh-agent for loaded identities..."
+          if ssh-add -l >/dev/null 2>&1; then
+            echo "ssh-agent contains an identity."
+            echo "SSH_SSH_ARGS=" >> $GITHUB_ENV
+          else
+            echo "ssh-agent empty — falling back to file-based key."
+            mkdir -p ~/.ssh
+            umask 077
+            echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+            # set SSH args to use the file-based key and disable strict host checking for automation
+            echo "SSH_SSH_ARGS=-i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" >> $GITHUB_ENV
+          fi
+          echo "SSH_SSH_ARGS is set to: $SSH_SSH_ARGS"
+
+      - name: Setup Vault CLI
+        uses: hashicorp/setup-vault@v1
+        with:
+          version: "1.12.0"
+
+      - name: Authenticate to Vault
+        env:
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+        run: |
+          # Verify auth (will error if token invalid)
+          vault status --format=json
+
+      - name: Fetch secrets from Vault KV v2 and write files (no logging of secret contents)
+        env:
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p alertmanager/secrets
+          echo "Fetching secrets from Vault path: ${VAULT_KV_PATH}"
+          vault kv get -format=json "${VAULT_KV_PATH}" > /tmp/vault_kv.json
+          jq -r '.data.data.slack_webhook // empty' /tmp/vault_kv.json > alertmanager/secrets/alertmanager_slack_webhook.txt
+          jq -r '.data.data.smtp_smarthost // empty' /tmp/vault_kv.json > alertmanager/secrets/alertmanager_smtp_smarthost.txt
+          jq -r '.data.data.smtp_username // empty' /tmp/vault_kv.json > alertmanager/secrets/alertmanager_smtp_username.txt
+          jq -r '.data.data.smtp_password // empty' /tmp/vault_kv.json > alertmanager/secrets/alertmanager_smtp_password.txt
+          jq -r '.data.data.pagerduty_key // empty' /tmp/vault_kv.json > alertmanager/secrets/alertmanager_pagerduty_key.txt
+          jq -r '.data.data.opsgenie_key // empty' /tmp/vault_kv.json > alertmanager/secrets/alertmanager_opsgenie_key.txt
+          jq -r '.data.data.alert_email_to // empty' /tmp/vault_kv.json > alertmanager/secrets/alertmanager_alert_email_to.txt
+          chmod 600 alertmanager/secrets/*
+          echo "Wrote secret files to alertmanager/secrets/ (contents not shown for security)."
+
+      - name: Check remote Docker & Docker Compose versions
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          echo "Checking remote Docker & docker compose versions..."
+          ssh $SSH_SSH_ARGS ${DEPLOY_USER}@${DEPLOY_HOST} 'docker --version || true; docker compose version || docker-compose --version || true'
+
+      - name: Rsync repo to remote host (exclude secrets)
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          # Use rsync over SSH; pass SSH args via -e
+          RSYNC_SSH="ssh $SSH_SSH_ARGS"
+          rsync -avz -e "$RSYNC_SSH" --delete --exclude '.git' --exclude 'alertmanager/secrets/*' ./ ${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/
+
+      - name: Securely copy secret files to remote host (uses ssh-agent or file key)
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          ssh $SSH_SSH_ARGS ${DEPLOY_USER}@${DEPLOY_HOST} "mkdir -p ${REMOTE_DIR}/alertmanager/secrets && chmod 700 ${REMOTE_DIR}/alertmanager/secrets"
+          # copy files via scp which will use ssh-agent or file key depending on SSH_SSH_ARGS
+          scp $SSH_SSH_ARGS alertmanager/secrets/* ${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/alertmanager/secrets/
+          ssh $SSH_SSH_ARGS ${DEPLOY_USER}@${DEPLOY_HOST} "chmod 600 ${REMOTE_DIR}/alertmanager/secrets/*"
+
+      - name: Pre-pull images on remote (speed up compose up)
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          ssh $SSH_SSH_ARGS ${DEPLOY_USER}@${DEPLOY_HOST} "cd ${REMOTE_DIR} && docker compose pull || true"
+
+      - name: Remote docker compose up (via SSH)
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          ssh $SSH_SSH_ARGS ${DEPLOY_USER}@${DEPLOY_HOST} "cd ${REMOTE_DIR} && docker compose up -d --build"
+
+      - name: Post-deploy check - Prometheus readiness (remote)
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          ssh $SSH_SSH_ARGS ${DEPLOY_USER}@${DEPLOY_HOST} "docker compose exec -T prometheus curl -fsS http://localhost:9090/-/ready" || true
