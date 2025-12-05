@@ -1,0 +1,62 @@
+name: Remote Deploy via SSH (agent + fallback)
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy-ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install rsync & ssh
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rsync openssh-client
+
+      - name: Setup ssh-agent
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+
+      - name: Verify ssh-agent has a key, fallback to file if not
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Checking ssh-agent for loaded identities..."
+          if ssh-add -l >/dev/null 2>&1; then
+            echo "ssh-agent contains an identity."
+            echo "SSH_SSH_ARGS=" >> $GITHUB_ENV
+          else
+            echo "ssh-agent empty — falling back to file-based key."
+            mkdir -p ~/.ssh
+            umask 077
+            echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+            echo "SSH_SSH_ARGS=-i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" >> $GITHUB_ENV
+          fi
+          echo "SSH_SSH_ARGS is set to: $SSH_SSH_ARGS"
+
+      - name: Build artifacts (optional)
+        run: |
+          docker build -f Dockerfile.service -t citysafesense:latest . || true
+
+      - name: Copy files to remote host (rsync via SSH)
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          RSYNC_SSH="ssh $SSH_SSH_ARGS"
+          rsync -avz -e "$RSYNC_SSH" --exclude '.git' ./ ${DEPLOY_USER}@${DEPLOY_HOST}:/opt/citysafesense/
+
+      - name: Remote docker compose up
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh $SSH_SSH_ARGS ${DEPLOY_USER}@${DEPLOY_HOST} 'cd /opt/citysafesense && docker compose pull || true && docker compose up -d --build'
